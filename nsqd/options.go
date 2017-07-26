@@ -79,6 +79,13 @@ type Options struct {
 	DeflateEnabled  bool `flag:"deflate"`
 	MaxDeflateLevel int  `flag:"max-deflate-level"`
 	SnappyEnabled   bool `flag:"snappy"`
+
+	CDNStatsServerAddr    string        `flag:"cdn-stats-server-addr"`
+	CDNStatsTopic         string        `flag:"cdn-stats-topic"`
+	CDNStatsFlushInterval time.Duration `flag:"cdn-stats-flush-interval"`
+	CDNStatsReadTimeout   time.Duration `flag:"cdn-stats-read-timeout"`
+	CDNStatsStopTimeout   time.Duration `flag:"cdn-stats-stop-timeout"`
+	CDNStatsKillTimeout   time.Duration `flag:"cdn-stats-kill-timeout"`
 }
 
 func NewOptions() *Options {
@@ -141,5 +148,12 @@ func NewOptions() *Options {
 		SnappyEnabled:   true,
 
 		TLSMinVersion: tls.VersionTLS10,
+
+		CDNStatsServerAddr:    "127.0.0.1:5151",
+		CDNStatsTopic:         "",
+		CDNStatsFlushInterval: 10 * time.Second,
+		CDNStatsReadTimeout:   5 * time.Second,
+		CDNStatsStopTimeout:   2 * time.Second,
+		CDNStatsKillTimeout:   2 * time.Second,
 	}
 }

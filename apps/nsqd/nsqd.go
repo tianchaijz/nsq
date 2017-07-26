@@ -144,6 +144,13 @@ func nsqdFlagSet(opts *nsqd.Options) *flag.FlagSet {
 	flagSet.Int("max-deflate-level", opts.MaxDeflateLevel, "max deflate compression level a client can negotiate (> values == > nsqd CPU usage)")
 	flagSet.Bool("snappy", opts.SnappyEnabled, "enable snappy feature negotiation (client compression)")
 
+	flagSet.String("cdn-stats-server-addr", opts.CDNStatsServerAddr, "<addr>:<port> to listen on for CDN stats server")
+	flagSet.String("cdn-stats-topic", opts.CDNStatsTopic, "topic name for CDN stats aggregation")
+	flagSet.Duration("cdn-stats-flush-interval", opts.CDNStatsFlushInterval, "flush interval for CDN stats aggregation")
+	flagSet.Duration("cdn-stats-read-timeout", opts.CDNStatsReadTimeout, "read timeout for CDN stats server")
+	flagSet.Duration("cdn-stats-stop-timeout", opts.CDNStatsStopTimeout, "stop timeout for CDN stats server")
+	flagSet.Duration("cdn-stats-kill-timeout", opts.CDNStatsKillTimeout, "kill timeout for CDN stats server")
+
 	return flagSet
 }
 

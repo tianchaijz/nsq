@@ -19,6 +19,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/nsqio/nsq/internal/cdn"
 	"github.com/nsqio/nsq/internal/clusterinfo"
 	"github.com/nsqio/nsq/internal/dirlock"
 	"github.com/nsqio/nsq/internal/http_api"
@@ -69,6 +70,8 @@ type NSQD struct {
 	waitGroup            util.WaitGroupWrapper
 
 	ci *clusterinfo.ClusterInfo
+
+	csa *cdn.StatsAgg
 }
 
 func New(opts *Options) *NSQD {
@@ -263,6 +266,18 @@ func (n *NSQD) Main() {
 	if n.getOpts().StatsdAddress != "" {
 		n.waitGroup.Wrap(func() { n.statsdLoop() })
 	}
+
+	opts := n.getOpts()
+	if opts.CDNStatsTopic != "" {
+		cst := n.GetTopic(opts.CDNStatsTopic)
+		csa := cdn.NewStatsAgg(opts.CDNStatsServerAddr,
+			newCDNStatsSendFunc(cst, n),
+			opts.CDNStatsFlushInterval, opts.CDNStatsReadTimeout,
+			opts.CDNStatsStopTimeout, opts.CDNStatsKillTimeout)
+		n.csa = csa
+		n.waitGroup.Wrap(func() { csa.Run() })
+		n.logf(LOG_INFO, "CDN STATS HTTP: listening on %s", opts.CDNStatsServerAddr)
+	}
 }
 
 type meta struct {
@@ -455,6 +470,10 @@ func (n *NSQD) PersistMetadata() error {
 }
 
 func (n *NSQD) Exit() {
+	if n.csa != nil {
+		n.csa.Stop()
+	}
+
 	if n.tcpListener != nil {
 		n.tcpListener.Close()
 	}
@@ -789,4 +808,19 @@ func buildTLSConfig(opts *Options) (*tls.Config, error) {
 
 func (n *NSQD) IsAuthEnabled() bool {
 	return len(n.getOpts().AuthHTTPAddresses) != 0
+}
+
+func newCDNStatsSendFunc(topic *Topic, n *NSQD) cdn.SendFunc {
+	return func(data []byte, err error) {
+		if err != nil {
+			n.logf(LOG_ERROR, "CDN STATS: data - %s", err)
+			return
+		}
+
+		msg := NewMessage(topic.GenerateID(), data)
+		err = topic.PutMessage(msg)
+		if err != nil {
+			n.logf(LOG_ERROR, "CDN STATS: failed to put message - %s", err)
+		}
+	}
 }
