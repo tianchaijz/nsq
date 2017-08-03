@@ -33,5 +33,10 @@ func HTTPPost(endpoint string, body *bytes.Buffer) (*http.Response, error) {
 	}
 	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Content-Type", *contentType)
+
+	if len(*authorization) > 0 {
+		req.Header.Set("Authorization", "Basic "+*authorization)
+	}
+
 	return httpclient.Do(req)
 }

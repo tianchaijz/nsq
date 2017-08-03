@@ -46,6 +46,7 @@ var (
 	httpRequestTimeout = flag.Duration("http-client-request-timeout", 20*time.Second, "timeout for HTTP request")
 	statusEvery        = flag.Int("status-every", 250, "the # of requests between logging status (per handler), 0 disables")
 	contentType        = flag.String("content-type", "application/octet-stream", "the Content-Type used for POST requests")
+	authorization      = flag.String("authorization", "", "the basic authorization used for POST requests")
 
 	getAddrs         = app.StringArray{}
 	postAddrs        = app.StringArray{}
