@@ -270,13 +270,13 @@ func (n *NSQD) Main() {
 	opts := n.getOpts()
 	if opts.CDNStatsTopic != "" {
 		cst := n.GetTopic(opts.CDNStatsTopic)
-		csa := cdn.NewStatsAgg(opts.CDNStatsServerAddr,
+		csa := cdn.NewStatsAgg(opts.CDNStatsHTTPAddress,
 			newCDNStatsSendFunc(cst, n),
 			opts.CDNStatsFlushInterval, opts.CDNStatsReadTimeout,
 			opts.CDNStatsStopTimeout, opts.CDNStatsKillTimeout)
 		n.csa = csa
 		n.waitGroup.Wrap(func() { csa.Run() })
-		n.logf(LOG_INFO, "CDN STATS HTTP: listening on %s", opts.CDNStatsServerAddr)
+		n.logf(LOG_INFO, "CDN STATS HTTP: listening on %s", opts.CDNStatsHTTPAddress)
 	}
 }
 
