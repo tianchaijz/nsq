@@ -91,6 +91,10 @@ func (ph *PublishHandler) committer() {
 		case <-ticker.C:
 			ph.send(false)
 		case doc := <-ph.recvChan:
+			// XXX: 8M limit
+			if ph.buf.Len()+len(doc) > 8388608 {
+				ph.send(false)
+			}
 			BulkPopulate(ph.buf, &doc)
 		case <-ph.stopChan:
 			ph.send(true)
