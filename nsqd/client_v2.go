@@ -106,6 +106,8 @@ type clientV2 struct {
 
 	AuthSecret string
 	AuthState  *auth.State
+
+	AccessAccepted bool
 }
 
 func newClientV2(id int64, conn net.Conn, ctx *context) *clientV2 {
@@ -576,6 +578,15 @@ func (c *clientV2) QueryAuthd() error {
 	}
 	c.AuthState = authState
 	return nil
+}
+
+func (c *clientV2) AccessTokenVerify(token string, secret string) error {
+	c.AccessAccepted = token == auth.AccessToken(c.Hostname, secret)
+	if c.AccessAccepted {
+		c.AuthState = &auth.State{}
+		return nil
+	}
+	return fmt.Errorf("access denied")
 }
 
 func (c *clientV2) Auth(secret string) error {

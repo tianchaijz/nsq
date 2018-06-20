@@ -525,7 +525,14 @@ func (p *protocolV2) AUTH(client *clientV2, params [][]byte) ([]byte, error) {
 		return nil, protocol.NewFatalClientErr(err, "E_AUTH_DISABLED", "AUTH disabled")
 	}
 
-	if err := client.Auth(string(body)); err != nil {
+	if client.ctx.nsqd.AccessTokenRequired() {
+		if err = client.AccessTokenVerify(string(body), p.ctx.nsqd.getOpts().AccessSecret); err == nil {
+			goto response
+		}
+	} else {
+		err = client.Auth(string(body))
+	}
+	if err != nil {
 		// we don't want to leak errors contacting the auth server to untrusted clients
 		p.ctx.nsqd.logf(LOG_WARN, "PROTOCOL(V2): [%s] AUTH failed %s", client, err)
 		return nil, protocol.NewFatalClientErr(err, "E_AUTH_FAILED", "AUTH failed")
@@ -534,8 +541,9 @@ func (p *protocolV2) AUTH(client *clientV2, params [][]byte) ([]byte, error) {
 	if !client.HasAuthorizations() {
 		return nil, protocol.NewFatalClientErr(nil, "E_UNAUTHORIZED", "AUTH no authorizations found")
 	}
-
-	resp, err := json.Marshal(struct {
+response:
+	var resp []byte
+	resp, err = json.Marshal(struct {
 		Identity        string `json:"identity"`
 		IdentityURL     string `json:"identity_url"`
 		PermissionCount int    `json:"permission_count"`
@@ -561,6 +569,9 @@ func (p *protocolV2) CheckAuth(client *clientV2, cmd, topicName, channelName str
 	// if auth is enabled, the client must have authorized already
 	// compare topic/channel against cached authorization data (refetching if expired)
 	if client.ctx.nsqd.IsAuthEnabled() {
+		if client.AccessAccepted {
+			return nil
+		}
 		if !client.HasAuthorizations() {
 			return protocol.NewFatalClientErr(nil, "E_AUTH_FIRST",
 				fmt.Sprintf("AUTH required before %s", cmd))

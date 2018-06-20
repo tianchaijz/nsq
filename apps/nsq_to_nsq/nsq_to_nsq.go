@@ -20,6 +20,7 @@ import (
 	"github.com/bitly/timer_metrics"
 	"github.com/nsqio/go-nsq"
 	"github.com/nsqio/nsq/internal/app"
+	"github.com/nsqio/nsq/internal/auth"
 	"github.com/nsqio/nsq/internal/protocol"
 	"github.com/nsqio/nsq/internal/version"
 )
@@ -46,6 +47,9 @@ var (
 
 	requireJSONField = flag.String("require-json-field", "", "for JSON messages: only pass messages that contain this field")
 	requireJSONValue = flag.String("require-json-value", "", "for JSON messages: only pass messages in which the required field has this value")
+
+	consumerAccessSecret = flag.String("consumer-access-secret", "", "the secret for consumer client token verification")
+	producerAccessSecret = flag.String("producer-access-secret", "", "the secret for producer client token verification")
 )
 
 func init() {
@@ -307,6 +311,14 @@ func main() {
 
 	if len(destNsqdTCPAddrs) == 0 {
 		log.Fatal("--destination-nsqd-tcp-address required")
+	}
+
+	if *consumerAccessSecret != "" {
+		cCfg.AuthSecret = auth.AccessToken("", *consumerAccessSecret)
+	}
+
+	if *producerAccessSecret != "" {
+		pCfg.AuthSecret = auth.AccessToken("", *producerAccessSecret)
 	}
 
 	switch *mode {

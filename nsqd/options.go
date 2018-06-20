@@ -49,6 +49,9 @@ type Options struct {
 	MaxReqTimeout time.Duration `flag:"max-req-timeout"`
 	ClientTimeout time.Duration
 
+	// client access secret
+	AccessSecret string `flag:"access-secret" cfg:"access_secret"`
+
 	// client overridable configuration options
 	MaxHeartbeatInterval   time.Duration `flag:"max-heartbeat-interval"`
 	MaxRdyCount            int64         `flag:"max-rdy-count"`

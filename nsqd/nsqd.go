@@ -744,6 +744,10 @@ func buildTLSConfig(opts *Options) (*tls.Config, error) {
 	return tlsConfig, nil
 }
 
+func (n *NSQD) AccessTokenRequired() bool {
+	return n.getOpts().AccessSecret != ""
+}
+
 func (n *NSQD) IsAuthEnabled() bool {
-	return len(n.getOpts().AuthHTTPAddresses) != 0
+	return n.AccessTokenRequired() || len(n.getOpts().AuthHTTPAddresses) != 0
 }

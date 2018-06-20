@@ -17,12 +17,14 @@ import (
 
 	"github.com/nsqio/go-nsq"
 	"github.com/nsqio/nsq/internal/app"
+	"github.com/nsqio/nsq/internal/auth"
 	"github.com/nsqio/nsq/internal/version"
 )
 
 var (
-	topic     = flag.String("topic", "", "NSQ topic to publish to")
-	delimiter = flag.String("delimiter", "\n", "character to split input from stdin")
+	topic        = flag.String("topic", "", "NSQ topic to publish to")
+	delimiter    = flag.String("delimiter", "\n", "character to split input from stdin")
+	accessSecret = flag.String("access-secret", "", "the secret for client token verification")
 
 	destNsqdTCPAddrs = app.StringArray{}
 )
@@ -44,6 +46,10 @@ func main() {
 
 	if len(*delimiter) != 1 {
 		log.Fatal("--delimiter must be a single byte")
+	}
+
+	if *accessSecret != "" {
+		cfg.AuthSecret = auth.AccessToken("", *accessSecret)
 	}
 
 	stopChan := make(chan bool)

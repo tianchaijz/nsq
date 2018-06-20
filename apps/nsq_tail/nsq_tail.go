@@ -12,6 +12,7 @@ import (
 
 	"github.com/nsqio/go-nsq"
 	"github.com/nsqio/nsq/internal/app"
+	"github.com/nsqio/nsq/internal/auth"
 	"github.com/nsqio/nsq/internal/version"
 )
 
@@ -22,6 +23,7 @@ var (
 	maxInFlight   = flag.Int("max-in-flight", 200, "max number of messages to allow in flight")
 	totalMessages = flag.Int("n", 0, "total messages to show (will wait if starved)")
 	printTopic    = flag.Bool("print-topic", false, "print topic name where message was received")
+	accessSecret  = flag.String("access-secret", "", "the secret for client token verification")
 
 	nsqdTCPAddrs     = app.StringArray{}
 	lookupdHTTPAddrs = app.StringArray{}
@@ -92,6 +94,10 @@ func main() {
 	}
 	if len(topics) == 0 {
 		log.Fatal("--topic required")
+	}
+
+	if *accessSecret != "" {
+		cfg.AuthSecret = auth.AccessToken("", *accessSecret)
 	}
 
 	sigChan := make(chan os.Signal, 1)
